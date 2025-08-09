@@ -1,5 +1,5 @@
 name: forest
-description: "A new Flutter project."
+description: "Application de suivi d'inventaire forestier"
 publish_to: 'none'
 version: 0.1.0
 
@@ -9,6 +9,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # Firebase  
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  cloud_firestore: ^5.6.12
+  
+  # UI & Navigation
+  cupertino_icons: ^1.0.2
+  google_fonts: ^6.1.0
+  
+  # Utils
+  intl: ^0.19.0
+  uuid: ^4.2.1
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +30,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  assets:
+    - assets/
+    - assets/logo/
+    - assets/img/
