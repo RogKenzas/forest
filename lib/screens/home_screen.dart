@@ -489,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 12), 
               Text(
                 'Bloc',
                 style: GoogleFonts.poppins(
