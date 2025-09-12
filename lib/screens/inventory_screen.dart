@@ -883,34 +883,34 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<bool> _confirm(String message) async {
-    return await showDialog<bool>(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                backgroundColor: AppConstants.darkGrey,
-                title: Text(
-                  'Confirmation',
-                  style: GoogleFonts.poppins(color: AppConstants.white),
-                ),
-                content: Text(
-                  message,
-                  style: GoogleFonts.poppins(color: AppConstants.textGrey),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Annuler'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Confirmer'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-  }
+  // Future<bool> _confirm(String message) async {
+  //   return await showDialog<bool>(
+  //         context: context,
+  //         builder:
+  //             (context) => AlertDialog(
+  //               backgroundColor: AppConstants.darkGrey,
+  //               title: Text(
+  //                 'Confirmation',
+  //                 style: GoogleFonts.poppins(color: AppConstants.white),
+  //               ),
+  //               content: Text(
+  //                 message,
+  //                 style: GoogleFonts.poppins(color: AppConstants.textGrey),
+  //               ),
+  //               actions: [
+  //                 TextButton(
+  //                   onPressed: () => Navigator.pop(context, false),
+  //                   child: const Text('Annuler'),
+  //                 ),
+  //                 TextButton(
+  //                   onPressed: () => Navigator.pop(context, true),
+  //                   child: const Text('Confirmer'),
+  //                 ),
+  //               ],
+  //             ),
+  //       ) ??
+  //       false;
+  // }
 
   Future<void> _openEditChantierSheet(DataCollectionModel d) async {
     final chantierController = TextEditingController(text: d.chantier);
