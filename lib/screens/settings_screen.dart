@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:forest/screens/home_screen.dart';
 import 'package:forest/services/navigation_helper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
