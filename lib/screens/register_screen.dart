@@ -7,6 +7,8 @@ import '../components/custom_button.dart';
 import '../components/custom_checkbox.dart';
 import '../components/social_button.dart';
 import '../services/auth_service.dart';
+import '../models/user_model.dart';
+import 'role_selection_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -226,6 +228,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final username =
         email.contains('@') ? email.split('@').first : firstName.toLowerCase();
 
+    // Naviguer vers la sélection du rôle
+    final selectedRole = await Navigator.push<UserRole>(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => RoleSelectionScreen(
+              email: email,
+              password: password,
+              firstName: firstName,
+              lastName: lastName,
+              username: username,
+            ),
+      ),
+    );
+
+    if (selectedRole == null) return;
+
     setState(() => _isLoading = true);
 
     try {
@@ -235,6 +254,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         firstName: firstName,
         lastName: lastName,
         username: username,
+        role: selectedRole,
       );
 
       if (!mounted) return;

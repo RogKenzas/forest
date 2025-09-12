@@ -12,6 +12,11 @@ class DataCollectionModel {
   final String qualite;
   final String observation;
   final String userId;
+  final List<Map<String, dynamic>> materielsNecessaires;
+  final bool isAlert;
+  final String alertLevel; // 'Faible' | 'Moyenne' | 'Élevée' | ''
+  final String alertReason;
+  final DateTime? alertCreatedAt;
 
   DataCollectionModel({
     required this.id,
@@ -27,14 +32,34 @@ class DataCollectionModel {
     required this.qualite,
     required this.observation,
     required this.userId,
-  });
+    List<Map<String, dynamic>>? materielsNecessaires,
+    this.isAlert = false,
+    this.alertLevel = '',
+    this.alertReason = '',
+    this.alertCreatedAt,
+  }) : materielsNecessaires = materielsNecessaires ?? const [];
 
   factory DataCollectionModel.fromMap(Map<String, dynamic> map) {
+    List<Map<String, dynamic>> parseMateriels(dynamic raw) {
+      if (raw is List) {
+        return raw
+            .whereType<dynamic>()
+            .map(
+              (e) =>
+                  e is Map<String, dynamic>
+                      ? e
+                      : e is Map
+                      ? Map<String, dynamic>.from(e)
+                      : <String, dynamic>{},
+            )
+            .toList();
+      }
+      return <Map<String, dynamic>>[];
+    }
+
     return DataCollectionModel(
       id: map['id'] ?? '',
-      date: map['date'] != null 
-          ? DateTime.parse(map['date']) 
-          : DateTime.now(),
+      date: map['date'] != null ? DateTime.parse(map['date']) : DateTime.now(),
       chantier: map['chantier'] ?? '',
       ufe: map['ufe'] ?? 0,
       acc: map['acc'] ?? 0,
@@ -46,6 +71,14 @@ class DataCollectionModel {
       qualite: map['qualite'] ?? '',
       observation: map['observation'] ?? '',
       userId: map['userId'] ?? '',
+      materielsNecessaires: parseMateriels(map['materielsNecessaires']),
+      isAlert: map['isAlert'] ?? false,
+      alertLevel: map['alertLevel'] ?? '',
+      alertReason: map['alertReason'] ?? '',
+      alertCreatedAt:
+          map['alertCreatedAt'] != null
+              ? DateTime.parse(map['alertCreatedAt'])
+              : null,
     );
   }
 
@@ -64,6 +97,11 @@ class DataCollectionModel {
       'qualite': qualite,
       'observation': observation,
       'userId': userId,
+      'materielsNecessaires': materielsNecessaires,
+      'isAlert': isAlert,
+      'alertLevel': alertLevel,
+      'alertReason': alertReason,
+      'alertCreatedAt': alertCreatedAt?.toIso8601String(),
     };
   }
 
@@ -81,6 +119,11 @@ class DataCollectionModel {
     String? qualite,
     String? observation,
     String? userId,
+    List<Map<String, dynamic>>? materielsNecessaires,
+    bool? isAlert,
+    String? alertLevel,
+    String? alertReason,
+    DateTime? alertCreatedAt,
   }) {
     return DataCollectionModel(
       id: id ?? this.id,
@@ -96,6 +139,11 @@ class DataCollectionModel {
       qualite: qualite ?? this.qualite,
       observation: observation ?? this.observation,
       userId: userId ?? this.userId,
+      materielsNecessaires: materielsNecessaires ?? this.materielsNecessaires,
+      isAlert: isAlert ?? this.isAlert,
+      alertLevel: alertLevel ?? this.alertLevel,
+      alertReason: alertReason ?? this.alertReason,
+      alertCreatedAt: alertCreatedAt ?? this.alertCreatedAt,
     );
   }
-} 
+}

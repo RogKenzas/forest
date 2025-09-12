@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_constants.dart';
+import '../models/user_model.dart';
 
-class CustomBottomNavBar extends StatelessWidget {
+class RoleBasedNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final UserRole userRole;
 
-  const CustomBottomNavBar({
+  const RoleBasedNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.userRole,
   });
 
   @override
@@ -26,7 +29,7 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -34,7 +37,15 @@ class CustomBottomNavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
+        children: _getNavItems(),
+      ),
+    );
+  }
+
+  List<Widget> _getNavItems() {
+    switch (userRole) {
+      case UserRole.agent:
+        return [
           _buildNavItem(icon: CupertinoIcons.home, label: 'Accueil', index: 0),
           _buildNavItem(
             icon: CupertinoIcons.cube_box,
@@ -56,9 +67,61 @@ class CustomBottomNavBar extends StatelessWidget {
             label: 'Profil',
             index: 4,
           ),
-        ],
-      ),
-    );
+        ];
+      case UserRole.analyst:
+        return [
+          _buildNavItem(icon: CupertinoIcons.home, label: 'Accueil', index: 0),
+          _buildNavItem(
+            icon: CupertinoIcons.chart_bar_alt_fill,
+            label: 'Analyse',
+            index: 1,
+          ),
+          _buildNavItem(
+            icon: CupertinoIcons.settings,
+            label: 'Paramètres',
+            index: 2,
+          ),
+          _buildNavItem(
+            icon: CupertinoIcons.person_fill,
+            label: 'Profil',
+            index: 3,
+          ),
+        ];
+      case UserRole.supervisor:
+        return [
+          _buildNavItem(icon: CupertinoIcons.home, label: 'Accueil', index: 0),
+          _buildNavItem(
+            icon: CupertinoIcons.exclamationmark_triangle,
+            label: 'Erreurs',
+            index: 1,
+          ),
+          _buildNavItem(
+            icon: CupertinoIcons.cloud,
+            label: 'Sauvegardes',
+            index: 2,
+          ),
+          _buildNavItem(
+            icon: CupertinoIcons.person_fill,
+            label: 'Profil',
+            index: 3,
+          ),
+        ];
+      case UserRole.admin:
+        return [
+          _buildNavItem(icon: CupertinoIcons.home, label: 'Accueil', index: 0),
+          _buildNavItem(
+            icon: CupertinoIcons.person_2,
+            label: 'Utilisateurs',
+            index: 1,
+          ),
+          _buildNavItem(icon: CupertinoIcons.tree, label: 'Zones', index: 2),
+          _buildNavItem(
+            icon: CupertinoIcons.person_fill,
+            label: 'Profil',
+            index: 3,
+          ),
+        ];
+    }
   }
 
   Widget _buildNavItem({
@@ -77,8 +140,7 @@ class CustomBottomNavBar extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color:
-                  isSelected ? AppConstants.primaryGreen : Colors.transparent,
+              color: isSelected ? _getRoleColor() : Colors.transparent,
               borderRadius: BorderRadius.circular(50),
             ),
             child: Padding(
@@ -94,10 +156,7 @@ class CustomBottomNavBar extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.poppins(
-              color:
-                  isSelected
-                      ? AppConstants.primaryGreen
-                      : AppConstants.textGrey,
+              color: isSelected ? _getRoleColor() : AppConstants.textGrey,
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -105,5 +164,18 @@ class CustomBottomNavBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getRoleColor() {
+    switch (userRole) {
+      case UserRole.agent:
+        return AppConstants.primaryGreen;
+      case UserRole.analyst:
+        return Colors.blue;
+      case UserRole.supervisor:
+        return Colors.orange;
+      case UserRole.admin:
+        return Colors.purple;
+    }
   }
 }

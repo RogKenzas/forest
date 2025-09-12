@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import '../constants/app_constants.dart';
 import '../components/custom_card.dart';
-import '../components/custom_bottom_navbar.dart';
+import '../components/role_based_navbar.dart';
 import '../models/data_collection_model.dart';
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
@@ -20,21 +20,16 @@ import '../services/auth_service.dart';
 import 'inventory_screen.dart';
 import 'data_collection_screen.dart';
 import 'profile_screen.dart';
-import 'admin_screen.dart';
 import 'missions_screen.dart';
-import 'analysis_screen.dart';
-import 'error_management_screen.dart';
-import 'backup_management_screen.dart';
-import 'forest_zones_management_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class AgentHomeScreen extends StatefulWidget {
+  const AgentHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<AgentHomeScreen> createState() => _AgentHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _AgentHomeScreenState extends State<AgentHomeScreen> {
   int _currentIndex = 0;
 
   final FirestoreService _firestoreService = FirestoreService();
@@ -131,85 +126,542 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _openUserInfoSheet(UserModel user) {
-    showModalBottomSheet(
-      context: context,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       backgroundColor: AppConstants.primaryBlack,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppConstants.white,
+                        backgroundImage: const AssetImage(
+                          "assets/logo/box.png",
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Agent de Terrain',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (_currentUser != null)
+                            Text(
+                              'Bonjour, ${_currentUser!.firstName}',
+                              style: GoogleFonts.poppins(
+                                color: AppConstants.textGrey,
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const NotificationsScreen(),
+                            ),
+                          );
+                        },
+                        child: Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppConstants.darkGrey,
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Icon(
+                                  Icons.notifications_outlined,
+                                  color: AppConstants.textGrey,
+                                  size: 25,
+                                ),
+                              ),
+                            ),
+                            if (_unreadAlerts > 0)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppConstants.darkGrey,
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.heavyImpact();
+                              // Action pour ajouter
+                            },
+                            child: Icon(
+                              Icons.add,
+                              color: AppConstants.textGrey,
+                              size: 25,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Fonctionnalités Agent de Terrain
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Mes Fonctionnalités',
+                style: GoogleFonts.poppins(
+                  color: AppConstants.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildAgentFeatures(),
+            ),
+            const SizedBox(height: 20),
+
+            // Statistiques
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppConstants.darkGrey,
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(13.0),
+                              child: Icon(
+                                CupertinoIcons.map,
+                                color: AppConstants.primaryGreen,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '$_totalReleves',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Text(
+                            'Total Relevés',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.textGrey,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppConstants.darkGrey,
+                              borderRadius: BorderRadius.circular(50),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(13.0),
+                              child: Icon(
+                                CupertinoIcons.helm,
+                                color: AppConstants.primaryGreen,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '$_distinctEspeces',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Text(
+                            'Espèces',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.textGrey,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const NotificationsScreen(),
+                                  ),
+                                ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppConstants.darkGrey,
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(13.0),
+                                child: Icon(
+                                  CupertinoIcons.bell,
+                                  color: AppConstants.primaryGreen,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '$_unreadAlerts',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Text(
+                            'Alertes',
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.textGrey,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Titre section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Profil utilisateur',
+                    'Chantiers Récents',
                     style: GoogleFonts.poppins(
                       color: AppConstants.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      CupertinoIcons.xmark,
-                      color: AppConstants.white,
+                  Text(
+                    'Voir Tout',
+                    style: GoogleFonts.poppins(
+                      color: AppConstants.primaryGreen,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Row(
+            ),
+
+            // Liste chantiers
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(18.0),
+                child:
+                    _isLoadingRecent
+                        ? const Center(
+                          child: CircularProgressIndicator(
+                            color: AppConstants.primaryGreen,
+                          ),
+                        )
+                        : (_recentChantiers.isEmpty)
+                        ? Center(
+                          child: Text(
+                            "Aucun chantier pour l'instant",
+                            style: GoogleFonts.poppins(
+                              color: AppConstants.textGrey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                        : ListView.separated(
+                          itemCount: _recentChantiers.length,
+                          separatorBuilder:
+                              (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final d = _recentChantiers[index];
+                            final author = _userCache[d.userId];
+                            final me = FirebaseAuth.instance.currentUser?.uid;
+                            final displayName =
+                                (author == null)
+                                    ? 'Inconnu'
+                                    : (author.id == me
+                                        ? 'vous'
+                                        : '@${author.username.isNotEmpty ? author.username : author.fullName}');
+                            return _buildDocumentCard(d, displayName, author);
+                          },
+                        ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: RoleBasedNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
+        userRole: UserRole.agent,
+      ),
+    );
+  }
+
+  Widget _buildAgentFeatures() {
+    return Column(
+      children: [
+        _buildFeatureCard(
+          icon: CupertinoIcons.doc_text,
+          title: 'Mes Missions',
+          subtitle: 'Consulter et gérer vos missions',
+          onTap: () {
+            if (_currentUser != null) {
+              NavigationHelper.pushFade(
+                context,
+                MissionsScreen(currentUser: _currentUser!),
+              );
+            }
+          },
+        ),
+        _buildFeatureCard(
+          icon: CupertinoIcons.arrow_clockwise,
+          title: 'Synchronisation',
+          subtitle: 'Synchroniser vos données',
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Fonctionnalité de synchronisation à venir'),
+                backgroundColor: AppConstants.primaryGreen,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: CustomCard(
+        onTap: onTap,
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppConstants.primaryGreen.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: AppConstants.primaryGreen, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppConstants.primaryGreen,
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      color: AppConstants.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.fullName.isEmpty ? user.username : user.fullName,
-                          style: GoogleFonts.poppins(
-                            color: AppConstants.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user.email,
-                          style: GoogleFonts.poppins(
-                            color: AppConstants.textGrey,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      color: AppConstants.textGrey,
+                      fontSize: 14,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Compte créé le ${DateFormat('dd/MM/yyyy').format(user.dateJoined)}',
-                style: GoogleFonts.poppins(
-                  color: AppConstants.textGrey,
-                  fontSize: 12,
-                ),
+            ),
+            const Icon(
+              CupertinoIcons.chevron_right,
+              color: AppConstants.textGrey,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentCard(
+    DataCollectionModel d,
+    String displayName,
+    UserModel? author,
+  ) {
+    return GestureDetector(
+      onTap: () => _openPrintSheet(d),
+      child: CustomCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppConstants.primaryGreen.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(height: 6),
-            ],
-          ),
-        );
-      },
+              child: const Icon(
+                CupertinoIcons.helm,
+                color: AppConstants.primaryGreen,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    d.chantier,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      color: AppConstants.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        displayName,
+                        style: GoogleFonts.poppins(
+                          color: AppConstants.primaryGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '  •  ${_dateFormat.format(d.date)}',
+                        style: GoogleFonts.poppins(
+                          color: AppConstants.textGrey,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryGreen,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '${d.bloc}',
+                    style: GoogleFonts.poppins(
+                      color: AppConstants.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Bloc',
+                  style: GoogleFonts.poppins(
+                    color: AppConstants.textGrey,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -380,653 +832,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppConstants.primaryBlack,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppConstants.white,
-                    backgroundImage: const AssetImage("assets/logo/box.png"),
-                  ),
-                  const SizedBox(width: 12),
-
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const NotificationsScreen(),
-                            ),
-                          );
-                        },
-                        child: Stack(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppConstants.darkGrey,
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Icon(
-                                  Icons.notifications_outlined,
-                                  color: AppConstants.textGrey,
-                                  size: 25,
-                                ),
-                              ),
-                            ),
-                            if (_unreadAlerts > 0)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppConstants.darkGrey,
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.heavyImpact();
-                              // _onAddTap(); // This function is removed, so this line is removed.
-                            },
-                            child: Icon(
-                              Icons.add,
-                              color: AppConstants.textGrey,
-                              size: 25,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppConstants.lightGrey,
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.search,
-                            color: AppConstants.textGrey,
-                            size: 25,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Rechercher...',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.textGrey,
-                              fontSize: 17,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: AppConstants.lightGrey,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: const Icon(
-                      Icons.tune,
-                      color: AppConstants.white,
-                      size: 23,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CustomCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppConstants.darkGrey,
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(13.0),
-                              child: Icon(
-                                CupertinoIcons.map,
-                                color: AppConstants.primaryGreen,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$_totalReleves',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                          Text(
-                            'Total',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.textGrey,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CustomCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppConstants.darkGrey,
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(13.0),
-                              child: Icon(
-                                CupertinoIcons.helm,
-                                color: AppConstants.primaryGreen,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$_distinctEspeces',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                          Text(
-                            'Espèces ob...',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.textGrey,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CustomCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            onTap:
-                                () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => NotificationsScreen(),
-                                  ),
-                                ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppConstants.darkGrey,
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                              child: const Padding(
-                                padding: EdgeInsets.all(13.0),
-                                child: Icon(
-                                  CupertinoIcons.bell,
-                                  color: AppConstants.primaryGreen,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$_unreadAlerts',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                            ),
-                          ),
-                          Text(
-                            'Alertes',
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.textGrey,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Fonctionnalités basées sur les rôles
-            if (_currentUser != null) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Fonctionnalités',
-                  style: GoogleFonts.poppins(
-                    color: AppConstants.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildRoleBasedFeatures(),
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            // Titre section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Chantiers Récents',
-                    style: GoogleFonts.poppins(
-                      color: AppConstants.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    'Voir Tout',
-                    style: GoogleFonts.poppins(
-                      color: AppConstants.primaryGreen,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Liste chantiers
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(18.0),
-                child:
-                    _isLoadingRecent
-                        ? const Center(
-                          child: CircularProgressIndicator(
-                            color: AppConstants.primaryGreen,
-                          ),
-                        )
-                        : (_recentChantiers.isEmpty)
-                        ? Center(
-                          child: Text(
-                            "Aucun chantier pour l'instant",
-                            style: GoogleFonts.poppins(
-                              color: AppConstants.textGrey,
-                              fontSize: 14,
-                            ),
-                          ),
-                        )
-                        : ListView.separated(
-                          itemCount: _recentChantiers.length,
-                          separatorBuilder:
-                              (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final d = _recentChantiers[index];
-                            final author = _userCache[d.userId];
-                            final me = FirebaseAuth.instance.currentUser?.uid;
-                            final displayName =
-                                (author == null)
-                                    ? 'Inconnu'
-                                    : (author.id == me
-                                        ? 'vous'
-                                        : '@${author.username.isNotEmpty ? author.username : author.fullName}');
-                            return _buildDocumentCard(d, displayName, author);
-                          },
-                        ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
-      ),
-    );
-  }
-
-  Widget _buildDocumentCard(
-    DataCollectionModel d,
-    String displayName,
-    UserModel? author,
-  ) {
-    return GestureDetector(
-      onTap: () => _openPrintSheet(d),
-      child: CustomCard(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppConstants.primaryGreen.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(
-                CupertinoIcons.helm,
-                color: AppConstants.primaryGreen,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    d.chantier,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      color: AppConstants.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap:
-                            author == null
-                                ? null
-                                : () => _openUserInfoSheet(author),
-                        child: Text(
-                          displayName,
-                          style: GoogleFonts.poppins(
-                            color: AppConstants.primaryGreen,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '  •  ${_dateFormat.format(d.date)}',
-                        style: GoogleFonts.poppins(
-                          color: AppConstants.textGrey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppConstants.primaryGreen,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    '${d.bloc}',
-                    style: GoogleFonts.poppins(
-                      color: AppConstants.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Bloc',
-                  style: GoogleFonts.poppins(
-                    color: AppConstants.textGrey,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleBasedFeatures() {
-    if (_currentUser == null) return const SizedBox.shrink();
-
-    List<Widget> features = [];
-
-    // Fonctionnalités pour Agent de terrain
-    if (_currentUser!.isAgent) {
-      features.addAll([
-        _buildFeatureCard(
-          icon: CupertinoIcons.doc_text,
-          title: 'Mes Missions',
-          subtitle: 'Consulter et gérer vos missions',
-          onTap: () {
-            NavigationHelper.pushFade(
-              context,
-              MissionsScreen(currentUser: _currentUser!),
-            );
-          },
-        ),
-        _buildFeatureCard(
-          icon: CupertinoIcons.arrow_clockwise,
-          title: 'Synchronisation',
-          subtitle: 'Synchroniser vos données',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Fonctionnalité de synchronisation à venir'),
-                backgroundColor: AppConstants.primaryGreen,
-              ),
-            );
-          },
-        ),
-      ]);
-    }
-
-    // Fonctionnalités pour Analyste
-    if (_currentUser!.isAnalyst) {
-      features.addAll([
-        _buildFeatureCard(
-          icon: CupertinoIcons.doc_chart,
-          title: 'Analyse des Données',
-          subtitle: 'Analyser et exporter les données',
-          onTap: () {
-            NavigationHelper.pushFade(
-              context,
-              AnalysisScreen(currentUser: _currentUser!),
-            );
-          },
-        ),
-      ]);
-    }
-
-    // Fonctionnalités pour Superviseur
-    if (_currentUser!.isSupervisor) {
-      features.addAll([
-        _buildFeatureCard(
-          icon: CupertinoIcons.exclamationmark_triangle,
-          title: 'Gestion des Erreurs',
-          subtitle: 'Gérer et résoudre les erreurs',
-          onTap: () {
-            NavigationHelper.pushFade(
-              context,
-              ErrorManagementScreen(currentUser: _currentUser!),
-            );
-          },
-        ),
-        _buildFeatureCard(
-          icon: CupertinoIcons.cloud,
-          title: 'Gestion des Sauvegardes',
-          subtitle: 'Créer et gérer les sauvegardes',
-          onTap: () {
-            NavigationHelper.pushFade(
-              context,
-              BackupManagementScreen(currentUser: _currentUser!),
-            );
-          },
-        ),
-      ]);
-    }
-
-    // Fonctionnalités pour Admin
-    if (_currentUser!.isAdmin) {
-      features.addAll([
-        _buildFeatureCard(
-          icon: CupertinoIcons.tree,
-          title: 'Zones Forestières',
-          subtitle: 'Gérer les zones forestières',
-          onTap: () {
-            NavigationHelper.pushFade(
-              context,
-              ForestZonesManagementScreen(currentUser: _currentUser!),
-            );
-          },
-        ),
-        _buildFeatureCard(
-          icon: CupertinoIcons.person_2,
-          title: 'Gestion des Utilisateurs',
-          subtitle: 'Gérer les comptes utilisateurs',
-          onTap: () {
-            NavigationHelper.pushFade(context, const AdminScreen());
-          },
-        ),
-      ]);
-    }
-
-    if (features.isEmpty) return const SizedBox.shrink();
-
-    return Column(children: features);
-  }
-
-  Widget _buildFeatureCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: CustomCard(
-        onTap: onTap,
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppConstants.primaryGreen.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: AppConstants.primaryGreen, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      color: AppConstants.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.poppins(
-                      color: AppConstants.textGrey,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              CupertinoIcons.chevron_right,
-              color: AppConstants.textGrey,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

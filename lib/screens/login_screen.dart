@@ -233,9 +233,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await _auth.signIn(email: email, password: password);
+      final user = await _auth.signIn(email: email, password: password);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      final isAdmin = (user?.email ?? '').toLowerCase() == 'admin@gmail.com';
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        isAdmin ? '/admin-home' : '/home',
+        (route) => false,
+      );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       String msg = 'Erreur de connexion';
